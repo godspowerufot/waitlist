@@ -1,21 +1,22 @@
-"use client";
 import { useState } from "react";
-
 import Image from "next/image";
 import bigShoe1 from "@/assets/images/bigShoe1.png";
-import { auth, database } from "../app/firebase";
+import { firestore, collection, addDoc } from "@/app/firebase"; // Import collection and addDoc functions
 
 export default function Home() {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState(null);
+
   const resetFormField = () => {
     setEmail("");
   };
+
   const submit = async () => {
     try {
-      // Store email in the Realtime Database under a 'waitlist' node
-      await database.ref("waitlist").push({
+      // Store email in the Firestore 'waitlist' collection
+      const waitlistCollection = collection(firestore, "waitlist");
+      await addDoc(waitlistCollection, {
         email,
         timestamp: new Date().toISOString(),
       });
@@ -24,6 +25,7 @@ export default function Home() {
       throw new Error("Failed to submit email");
     }
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email) {
@@ -46,6 +48,7 @@ export default function Home() {
   const isValidEmail = (email) => {
     return /\S+@\S+\.\S+/.test(email);
   };
+
   const handleChange = (e) => {
     if (!isValidEmail(e.target.value)) {
       setError("Email is invalid");
@@ -54,6 +57,7 @@ export default function Home() {
     }
     setEmail(e.target.value);
   };
+
   return (
     <main>
       <section className="w-full py-8 z-10 sm:px-16 px-8 flex xl:flex-row flex-col justify-center gap-10">
@@ -94,9 +98,9 @@ export default function Home() {
                 value={email}
                 onChange={handleChange}
               />
-              <div className="flex max-sm:justify-end items-center max-sm:w-full">
+              <div className="flex justify-end items-center w-full">
                 <button
-                  className="w-full bg-red rounded-full text-white  border-coral-red px-7 py-4"
+                  className="w-full bg-red-500 rounded-full text-black  border-red px-7 py-4"
                   type="submit"
                 >
                   Join waitlist
@@ -112,6 +116,7 @@ export default function Home() {
             alt="shoe collection"
             width={610}
             height={500}
+            layout="responsive"
             className="object-contain"
           />
         </div>
