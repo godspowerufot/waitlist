@@ -1,113 +1,121 @@
+"use client";
+import { useState } from "react";
+
 import Image from "next/image";
+import bigShoe1 from "@/assets/images/bigShoe1.png";
+import { auth, database } from "../app/firebase";
 
 export default function Home() {
+  const [email, setEmail] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState(null);
+  const resetFormField = () => {
+    setEmail("");
+  };
+  const submit = async () => {
+    try {
+      // Store email in the Realtime Database under a 'waitlist' node
+      await database.ref("waitlist").push({
+        email,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error adding email to waitlist:", error);
+      throw new Error("Failed to submit email");
+    }
+  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email) {
+      setError("Email is invalid");
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setError("Email is invalid");
+      return;
+    }
+    try {
+      await submit();
+      resetFormField();
+      setIsSubmitted(true);
+    } catch (error) {
+      setError("Failed to submit email");
+    }
+  };
+
+  const isValidEmail = (email) => {
+    return /\S+@\S+\.\S+/.test(email);
+  };
+  const handleChange = (e) => {
+    if (!isValidEmail(e.target.value)) {
+      setError("Email is invalid");
+    } else {
+      setError(null);
+    }
+    setEmail(e.target.value);
+  };
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.js</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <main>
+      <section className="w-full py-8 z-10 sm:px-16 px-8 flex xl:flex-row flex-col justify-center gap-10">
+        <div className="xl:w-2/5 flex flex-col justify-center items-start w-full">
+          <p className="text-xl font-montserrat text-coral-red">
+            Our summer collection
+          </p>
+          <h1 className="mt-10 font-palanquin text-8xl max-sm:text-[72px] font-bold">
+            <span className="xl:bg-white xl:whitespace-nowrap z-10 pr-10">
+              The New Arrival
+            </span>
+            <br />
+            <span className="text-coral-red inline-block mt-3">Nike </span>{" "}
+            Shoes
+          </h1>
+          <p className="font-montserrat text-slate-gray text-lg leading-8 mt-6 mb-14 sm:max-w-sm">
+            Discover stylish Nike arrivals, quality comfort, and innovation for
+            your active life.
+          </p>
+          {isSubmitted ? (
+            <div>
+              <p className="font-bold text-2xl">
+                Well received! We will keep you updated.
+              </p>
+            </div>
+          ) : (
+            <form
+              className="w-full flex items-center max-sm:flex-col gap-5 p-2.5 sm:border sm:border-slate-gray rounded-full"
+              onSubmit={handleSubmit}
+              id="joinwaitlist"
+            >
+              <input
+                type="email"
+                name="email"
+                id="email"
+                placeholder="Enter your email address"
+                className="input"
+                value={email}
+                onChange={handleChange}
+              />
+              <div className="flex max-sm:justify-end items-center max-sm:w-full">
+                <button
+                  className="w-full bg-red rounded-full text-white  border-coral-red px-7 py-4"
+                  type="submit"
+                >
+                  Join waitlist
+                </button>
+              </div>
+            </form>
+          )}
+          {error && <p className="text-rose-700 mt-5 ml-3">{error}</p>}
         </div>
-      </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800 hover:dark:bg-opacity-30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
+        <div className="flex-1 flex justify-center items-center bg-center bg-cover">
+          <Image
+            src={bigShoe1}
+            alt="shoe collection"
+            width={610}
+            height={500}
+            className="object-contain"
+          />
+        </div>
+      </section>
     </main>
   );
 }
